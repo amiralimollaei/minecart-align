@@ -86,10 +86,9 @@ fn heuristic(point: &Point, target: &Point) -> f64 {
 fn reconstruct_path(
     came_from: &HashMap<Point, (Point, &'static str)>,
     mut current: Point,
-    last_action: &'static str,
 ) -> (Vec<Point>, Vec<&'static str>) {
     let mut total_path = vec![current];
-    let mut total_actions = vec![last_action];
+    let mut total_actions = Vec::new();
     
     while let Some((prev, action)) = came_from.get(&current) {
         current = *prev;
@@ -166,7 +165,7 @@ fn a_star(start: Point, goal: Point) -> Option<(Vec<Point>, Vec<&'static str>)> 
         unsafe {
             if distance_to_goal < PRECISION {
                 println!("found a path with distance={}", min_distance_to_goal);
-                return Some(reconstruct_path(&came_from, current, action));
+                return Some(reconstruct_path(&came_from, current));
             }
         }
         
