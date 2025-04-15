@@ -101,15 +101,28 @@ fn reconstruct_path(
 }
 // Find neighbors of a point - now returns static str references
 #[inline]
-fn neighbors(current: &Point) -> [(Point, &'static str); 4] {
+fn neighbors(current: &Point) -> Vec<(Point, &'static str)> {
+    let mut valid_neibours: Vec<(Point, &str)> = Vec::with_capacity(4);
+
     unsafe {
-        [
-            (Point::new((current.x + ORIGIN0.x) * 0.5), "half_left"),
-            (Point::new((current.x + ORIGIN1.x) * 0.5), "half_right"),
-            (Point::new(current.x - CONSTANT_MOVEMENT), "constant_left"),
-            (Point::new(current.x + CONSTANT_MOVEMENT), "constant_right")
-        ]
+        if current.x != ORIGIN0.x  {
+            valid_neibours.push((Point::new((current.x + ORIGIN0.x) * 0.5), "half_left"));
+        }
+
+        if current.x != ORIGIN1.x  {
+            valid_neibours.push((Point::new((current.x + ORIGIN1.x) * 0.5), "half_right"));
+        }
+
+        if CONSTANT_MOVEMENT <= current.x  {
+            valid_neibours.push((Point::new(current.x - CONSTANT_MOVEMENT), "constant_left"));
+        }
+
+        if (CONSTANT_MOVEMENT + current.x) <= 1.0 {
+            valid_neibours.push((Point::new(current.x + CONSTANT_MOVEMENT), "constant_right"));
+        }
     }
+
+    valid_neibours
 }
 // A* algorithm
 fn a_star(start: Point, goal: Point) -> Option<(Vec<Point>, Vec<&'static str>)> {
@@ -296,6 +309,38 @@ fn main() {
             process::exit(1);
         }
     };
+
+    // Check if target is valid
+    if (target_value < 0.0) || (target_value > 1.0) {
+        println!("Error: Invalid target value {}, value must be in range [0, 1]", target_value);
+        print_usage();
+        process::exit(1);
+    };
+
+    // Check if start is valid
+    if (start_value < 0.0) || (start_value > 1.0) {
+        println!("Error: Invalid start value, value must be in range [0, 1]");
+        print_usage();
+        process::exit(1);
+    };
+
+    // Check if PRECISION is valid
+    unsafe {
+        if (PRECISION < 0.0) || (PRECISION > 1.0) {
+            println!("Error: Invalid precision value, value must be in range [0, 1]");
+            print_usage();
+            process::exit(1);
+        };
+    }
+
+    // Check if CONSTANT_MOVEMENT is valid
+    unsafe {
+        if (CONSTANT_MOVEMENT < 0.0) || (CONSTANT_MOVEMENT > 1.0) {
+            println!("Error: Invalid constant value, value must be in range [0, 1]");
+            print_usage();
+            process::exit(1);
+        };
+    }
     
     let start = Point::new(start_value);
     let target = Point::new(target_value);
